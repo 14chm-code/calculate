@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>받아올림 계산 배틀 2P</title>
+<style>
+:root{--bg:#10172b;--panel:#1b2541;--line:#344363;--text:#f5f7ff;--muted:#b6c2df;--blue:#5aa7ff;--pink:#ff7198;--green:#55d6a0;--gold:#ffd166}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#24355e 0%,var(--bg) 60%);color:var(--text);font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif}
+button,input{font:inherit}.wrap{max-width:1100px;margin:auto;padding:24px 18px 36px}header{text-align:center;margin-bottom:20px}h1{margin:0;font-size:clamp(1.7rem,4vw,2.6rem);letter-spacing:-.04em}.sub{color:var(--muted);margin:8px 0 0}
+.topbar{display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;margin:18px 0}.timer{background:#0a1020;border:1px solid var(--line);border-radius:16px;padding:10px 22px;min-width:190px;text-align:center}.timer small{display:block;color:var(--muted);font-size:.8rem}#status{font-size:1.05rem;font-weight:850}.pill{color:var(--muted);border:1px solid var(--line);padding:8px 12px;border-radius:999px}
+.arena{display:grid;grid-template-columns:1fr 1fr;gap:16px}.player{--accent:var(--blue);background:linear-gradient(180deg,#202d4d,var(--panel));border:2px solid color-mix(in srgb,var(--accent),transparent 40%);border-radius:22px;padding:20px;min-width:0;box-shadow:0 12px 30px #0003}.player.p2{--accent:var(--pink)}
+.player-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.name{font-size:1.3rem;font-weight:850}.score{color:var(--accent);font-size:1.1rem;font-weight:800}.score strong{font-size:2rem}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}.stat{background:#0e162a;border:1px solid var(--line);border-radius:10px;padding:7px 10px;color:var(--muted);font-size:.86rem}.stat b{color:var(--text)}
+.clock{display:flex;justify-content:space-between;gap:8px;align-items:center;background:#0e162a;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:14px}.clock span{color:var(--muted);font-size:.9rem}.clock strong{font-size:1.3rem;font-variant-numeric:tabular-nums}
+.problem-box{background:#f7f9ff;color:#15203a;border-radius:18px;padding:22px 12px 18px;text-align:center}.level{color:#58698d;font-weight:750;font-size:.9rem}.problem{display:flex;align-items:center;justify-content:center;gap:12px;margin:12px 0 18px;font-size:clamp(2.5rem,6vw,4rem);font-weight:950;letter-spacing:-.04em;font-variant-numeric:tabular-nums}.problem .plus{color:var(--accent)}
+.answer-row{display:flex;justify-content:center;gap:8px}.answer{width:min(48%,180px);min-width:0;text-align:center;font-size:1.5rem;font-weight:800;padding:12px 10px;border:2px solid #c6d0e5;border-radius:12px;outline:none;background:white;color:#15203a}.answer:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent),transparent 78%)}.answer:disabled{opacity:.6}
+.submit{border:0;border-radius:12px;background:var(--accent);color:#071326;font-weight:900;padding:0 18px;cursor:pointer}.submit:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}button:disabled{cursor:not-allowed;opacity:.5}
+.feedback{min-height:28px;margin:12px 0 0;font-weight:750;text-align:center}.feedback.good{color:var(--green)}.feedback.bad{color:#ff9caa}.feedback.info{color:var(--gold)}
+.help{margin-top:18px;border:1px solid var(--line);background:#111a30a8;border-radius:16px;padding:14px 18px;color:var(--muted);line-height:1.65}.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}.main-btn,.secondary-btn{border:0;border-radius:13px;padding:12px 22px;font-weight:850;cursor:pointer}.main-btn{background:var(--gold);color:#30210a}.secondary-btn{background:#2b3a5d;color:var(--text);border:1px solid #52658d}
+.overlay{position:fixed;inset:0;background:#080d1bd9;display:grid;place-items:center;padding:20px;z-index:5}.modal{width:min(520px,100%);background:#202c4b;border:1px solid #53658d;border-radius:24px;padding:28px;text-align:center;box-shadow:0 24px 80px #0008}.modal h2{font-size:2rem;margin:0 0 8px}.modal p{color:var(--muted);line-height:1.6}.win{color:var(--gold);font-size:1.25rem;font-weight:900}.hidden{display:none!important}
+@media(max-width:680px){.wrap{padding:16px 10px 26px}.arena{grid-template-columns:1fr;gap:12px}.player{padding:15px}.problem{font-size:3rem}.topbar{margin:14px 0}.player-head{align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>⚡ 받아올림 계산 배틀 <span style="color:var(--gold)">2P</span></h1><p class="sub">각자 20문제! 누가 더 정확하고 빠를까?</p></header>
+<div class="topbar"><div class="timer"><small>게임 진행 상황</small><span id="status">시작 전</span><small>제한 시간 없음 · 개인별 스톱워치</small></div><div class="pill">🧠 정답 +1점 · 오답 0점</div><div class="pill" id="progress">각자 20문제</div></div>
+<main class="arena" aria-label="두 명의 플레이어 계산 화면">
+<section class="player p1">
+<div class="player-head"><div class="name">🔵 플레이어 1</div><div class="score"><strong id="score1">0</strong>점</div></div>
+<div class="stats"><div class="stat">문제 <b id="q1">1/20</b></div><div class="stat">정답 <b id="correct1">0</b></div><div class="stat">오답 <b id="wrong1">0</b></div></div>
+<div class="clock"><span>⏱️ 내 기록</span><strong id="clock1">00:00.0</strong></div>
+<div class="problem-box"><div class="level" id="level1">LEVEL 1 · 준비</div><div class="problem"><span id="a1">27</span><span class="plus">+</span><span id="b1">8</span><span>=</span><span>?</span></div>
+<form class="answer-row" id="form1" autocomplete="off"><input class="answer" id="input1" type="number" inputmode="numeric" placeholder="정답" aria-label="플레이어 1 정답" required disabled><button class="submit" id="submit1" type="submit" disabled>확인 ↵</button></form></div>
+<div class="feedback" id="feedback1" aria-live="polite">게임 시작을 기다리는 중</div>
+</section>
+<section class="player p2">
+<div class="player-head"><div class="name">🔴 플레이어 2</div><div class="score"><strong id="score2">0</strong>점</div></div>
+<div class="stats"><div class="stat">문제 <b id="q2">1/20</b></div><div class="stat">정답 <b id="correct2">0</b></div><div class="stat">오답 <b id="wrong2">0</b></div></div>
+<div class="clock"><span>⏱️ 내 기록</span><strong id="clock2">00:00.0</strong></div>
+<div class="problem-box"><div class="level" id="level2">LEVEL 1 · 준비</div><div class="problem"><span id="a2">38</span><span class="plus">+</span><span id="b2">7</span><span>=</span><span>?</span></div>
+<form class="answer-row" id="form2" autocomplete="off"><input class="answer" id="input2" type="number" inputmode="numeric" placeholder="정답" aria-label="플레이어 2 정답" required disabled><button class="submit" id="submit2" type="submit" disabled>확인 ↵</button></form></div>
+<div class="feedback" id="feedback2" aria-live="polite">게임 시작을 기다리는 중</div>
+</section>
+</main>
+<div class="help"><b style="color:var(--text)">🎯 규칙</b><br>
+• 제한 시간은 없어. 게임 시작과 동시에 두 사람의 스톱워치가 각각 작동해.<br>
+• 각자 20문제를 풀어. 맞히면 1점, 틀리면 0점이고 오답도 한 문제로 계산돼.<br>
+• 20문제를 모두 푼 순간 해당 플레이어의 시간이 멈춰. 두 사람 모두 끝내면 결과를 비교해.<br>
+• 정답 수가 많은 사람이 승리! 정답 수가 같으면 더 빨리 끝낸 사람이 승리하고, 시간까지 같으면 무승부야.<br>
+• 문제는 반드시 받아올림이 있는 두 자리 수 + 한 자리 수이며, 뒤로 갈수록 어려워져.</div>
+<div class="controls"><button class="main-btn" id="startBtn">🚀 게임 시작</button><button class="secondary-btn" id="resetBtn">↻ 처음부터</button></div>
+</div>
+<div class="overlay" id="startOverlay"><div class="modal"><div style="font-size:3rem">🏁</div><h2>계산 배틀 준비!</h2><p>각자 20문제를 풀어 봐.<br>제한 시간은 없고, 각자의 풀이 시간이 기록돼.<br>정답 개수가 우선이고, 정답 수가 같으면 시간이 더 짧은 사람이 이겨!</p><button class="main-btn" id="overlayStart">대전 시작하기</button></div></div>
+<div class="overlay hidden" id="resultOverlay"><div class="modal"><div style="font-size:3rem" id="resultEmoji">🏆</div><h2 id="resultTitle">게임 종료!</h2><p id="resultText"></p><div class="win" id="winnerText"></div><div class="controls"><button class="main-btn" id="againBtn">다시 대전하기</button><button class="secondary-btn" id="closeResultBtn">결과 닫기</button></div></div></div>
+<script>
+(() => {
+const TOTAL=20;
+let started=false, ended=false, startAt=0, timerId=null;
+const state=[1,2].map(id=>({id,score:0,correct:0,wrong:0,index:0,questions:[],done:false,elapsed:0,streak:0}));
+const $=id=>document.getElementById(id);
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+function makeQuestion(level){
+  // Every generated problem must require carrying from ones to tens.
+  let a,b;
+  do{
+    if(level===1){a=rand(12,49);b=rand(2,9)}
+    else if(level===2){a=rand(35,79);b=rand(4,9)}
+    else if(level===3){a=rand(55,89);b=rand(6,9)}
+    else {a=rand(68,99);b=rand(6,9)}
+  }while(a%10+b<10);
+  return {a,b,answer:a+b};
+}
+function levelFor(index){return index<5?1:index<10?2:index<15?3:4}
+function fmt(ms){let t=Math.max(0,ms);let m=Math.floor(t/60000),s=Math.floor(t%60000/1000),d=Math.floor(t%1000/100);return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+d}
+function elapsed(p){return p.done?p.elapsed:(started?performance.now()-startAt:0)}
+function setFeedback(id,msg,type=''){const el=$('feedback'+id);el.textContent=msg;el.className='feedback '+type}
+function draw(id){
+ const p=state[id-1],q=p.questions[p.index]; if(!q)return;
+ $('a'+id).textContent=q.a;$('b'+id).textContent=q.b;
+ const lv=levelFor(p.index);$('level'+id).textContent='LEVEL '+lv+' · '+(['','기본 받아올림','빠른 계산','고난도','최고 난도'][lv]);
+ $('q'+id).textContent=(p.index+1)+'/'+TOTAL;
+ $('input'+id).value='';
+}
+function update(){
+ state.forEach(p=>{
+  const id=p.id;$('score'+id).textContent=p.score;$('correct'+id).textContent=p.correct;$('wrong'+id).textContent=p.wrong;
+  $('clock'+id).textContent=fmt(elapsed(p));
+ });
+ const done=state.filter(p=>p.done).length;
+ $('status').textContent=!started?'시작 전':ended?'종료':done===0?'두 명 플레이 중':done===1?'한 명 완료 · 대전 중':'모두 완료';
+ $('progress').textContent=state.filter(p=>p.done).length===2?'20문제 완료':`완료 ${done}/2명`;
+}
+function start(){
+ if(started&&!ended)return;
+ started=true;ended=false;startAt=performance.now();
+ state.forEach(p=>{
+   p.score=0;p.correct=0;p.wrong=0;p.index=0;p.done=false;p.elapsed=0;p.streak=0;
+   p.questions=Array.from({length:TOTAL},(_,i)=>makeQuestion(levelFor(i)));
+   $('input'+p.id).disabled=false;$('submit'+p.id).disabled=false;
+   draw(p.id);setFeedback(p.id,'시작! 정답을 입력해.','info');
+ });
+ $('startOverlay').classList.add('hidden');$('resultOverlay').classList.add('hidden');$('startBtn').disabled=true;
+ clearInterval(timerId);timerId=setInterval(update,100);update();$('input1').focus();
+}
+function submit(id,e){
+ e.preventDefault();const p=state[id-1];if(!started||ended||p.done)return;
+ const input=$('input'+id);if(input.value.trim()===''){input.focus();return}
+ const q=p.questions[p.index],answer=Number(input.value);
+ if(answer===q.answer){p.correct++;p.score++;p.streak++;setFeedback(id,p.streak>=3?'정답! 🔥 연속 '+p.streak+'개!':'정답! +1점','good')}
+ else{p.wrong++;p.streak=0;setFeedback(id,`아쉬워! 정답은 ${q.answer}이야.`,'bad')}
+ p.index++;
+ if(p.index>=TOTAL){
+   p.done=true;p.elapsed=performance.now()-startAt;
+   input.disabled=true;$('submit'+id).disabled=true;
+   $('q'+id).textContent=TOTAL+'/'+TOTAL;
+   $('level'+id).textContent='완료! 🎉';
+   $('a'+id).textContent='✓';$('b'+id).textContent='✓';
+   setFeedback(id,`완료! 기록 ${fmt(p.elapsed)} · 정답 ${p.correct}/${TOTAL}`,'info');
+ }else{
+   draw(id);
+   // Do not steal focus from the other player's input in a shared keyboard setup.
+   input.focus();
+ }
+ update();
+ if(state.every(x=>x.done))finish();
+}
+function finish(){
+ ended=true;clearInterval(timerId);update();
+ const [a,b]=state;let winner='무승부!',emoji='🤝';
+ if(a.correct>b.correct){winner='🔵 플레이어 1 승리!';emoji='🏆'}
+ else if(b.correct>a.correct){winner='🔴 플레이어 2 승리!';emoji='🏆'}
+ else if(a.elapsed<b.elapsed){winner='🔵 플레이어 1 승리! (시간 우세)';emoji='🏆'}
+ else if(b.elapsed<a.elapsed){winner='🔴 플레이어 2 승리! (시간 우세)';emoji='🏆'}
+ $('resultEmoji').textContent=emoji;$('resultTitle').textContent='대전 종료!';
+ $('resultText').textContent=`플레이어 1: ${a.correct}개 정답 · ${fmt(a.elapsed)} / 플레이어 2: ${b.correct}개 정답 · ${fmt(b.elapsed)}`;
+ $('winnerText').textContent=winner;$('resultOverlay').classList.remove('hidden');$('startBtn').disabled=false;$('startBtn').textContent='다시 대전하기';
+}
+function reset(){
+ clearInterval(timerId);started=false;ended=false;startAt=0;
+ state.forEach(p=>{p.score=p.correct=p.wrong=p.index=p.elapsed=p.streak=0;p.done=false;p.questions=[];});
+ state.forEach(p=>{let id=p.id;$('score'+id).textContent='0';$('correct'+id).textContent='0';$('wrong'+id).textContent='0';$('clock'+id).textContent='00:00.0';$('q'+id).textContent='1/'+TOTAL;$('level'+id).textContent='LEVEL 1 · 준비';$('a'+id).textContent='—';$('b'+id).textContent='—';$('input'+id).value='';$('input'+id).disabled=true;$('submit'+id).disabled=true;setFeedback(id,'게임 시작을 기다리는 중');});
+ $('status').textContent='시작 전';$('progress').textContent='각자 20문제';$('startBtn').disabled=false;$('startBtn').textContent='🚀 게임 시작';$('resultOverlay').classList.add('hidden');$('startOverlay').classList.remove('hidden');
+}
+$('form1').addEventListener('submit',e=>submit(1,e));$('form2').addEventListener('submit',e=>submit(2,e));
+$('startBtn').addEventListener('click',start);$('overlayStart').addEventListener('click',start);$('resetBtn').addEventListener('click',reset);$('againBtn').addEventListener('click',reset);$('closeResultBtn').addEventListener('click',()=>$('resultOverlay').classList.add('hidden'));
+reset();
+})();
+</script>
+</body>
+</html>
